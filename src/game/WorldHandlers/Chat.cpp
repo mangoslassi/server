@@ -189,6 +189,7 @@ ChatCommand* ChatHandler::getCommandTable()
         { "level",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleCharacterLevelCommand,      "", NULL },
         { "rename",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterRenameCommand,     "", NULL },
         { "reputation",     SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterReputationCommand, "", NULL },
+        { "create",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterCreateCommand,     "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -691,7 +692,7 @@ ChatCommand* ChatHandler::getCommandTable()
         { "auction",        SEC_ADMINISTRATOR,  false, NULL,                                           "", auctionCommandTable  },
         { "ahbot",          SEC_ADMINISTRATOR,  true,  NULL,                                           "", ahbotCommandTable    },
         { "cast",           SEC_ADMINISTRATOR,  false, NULL,                                           "", castCommandTable     },
-        { "character",      SEC_GAMEMASTER,     true,  NULL,                                           "", characterCommandTable},
+        { "character",      SEC_PLAYER,         true,  NULL,                                           "", characterCommandTable},
         { "debug",          SEC_MODERATOR,      true,  NULL,                                           "", debugCommandTable    },
         { "event",          SEC_GAMEMASTER,     false, NULL,                                           "", eventCommandTable    },
         { "gm",             SEC_PLAYER,         true,  NULL,                                           "", gmCommandTable       },

@@ -3596,6 +3596,168 @@ bool ChatHandler::HandleCharacterRenameCommand(char* args)
     return true;
 }
 
+bool validate_string_as_number_uint8(const std::string &str) {
+    std::string::const_iterator it = str.begin();
+
+    while(it != str.end() && std::isdigit(*it)) {
+        it += 1;
+    }
+
+    return !str.empty() && it == str.end();
+}
+
+// create character
+bool ChatHandler::HandleCharacterCreateCommand(char *args)
+{
+    std::string str_args = std::string(args);
+
+    char finalChar = *str_args.rbegin();
+
+    if(finalChar != ' ') {
+        str_args.append(" ");
+    }
+
+    int spaces = 0;
+
+    std::string account_name;
+    std::string character_name;
+    uint8_t race_;
+    uint8_t class_;
+    uint8_t gender;
+    uint8_t skin;
+    uint8_t face;
+    uint8_t hairStyle;
+    uint8_t hairColor;
+    uint8_t facialHair;
+    uint8_t outfitId;
+
+    size_t i = 0;
+    size_t pos = 0;
+    size_t last = 0;
+    std::string delimiter = " ";
+    while((pos = str_args.find(delimiter)) != std::string::npos) {
+        if(i == 0) {
+            account_name = str_args.substr(0, pos);
+        } else if(i == 1) {
+            character_name = str_args.substr(0, pos);
+        } else if(i == 2) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Third argument (race) not a valid number." << std::endl;
+                return false;
+            } else {
+                race_ = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 3) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Fourth argument (class) not a valid number." << std::endl;
+                return false;
+            } else {
+                class_ = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 4) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Fifth argument (gender) not a valid number." << std::endl;
+                return false;
+            } else {
+                gender = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 5) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Sixth argument (skin) not a valid number." << std::endl;
+                return false;
+            } else {
+                skin = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 6) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Seventh argument (face) not a valid number." << std::endl;
+                return false;
+            } else {
+                face = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 7) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Eighth argument (hairStyle) not a valid number." << std::endl;
+                return false;
+            } else {
+                hairStyle = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 8) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Ninth argument (hairColor) not a valid number." << std::endl;
+                return false;
+            } else {
+                hairColor = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 9) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Tenth argument (facialHair) not a valid number." << std::endl;
+                return false;
+            } else {
+                facialHair = atoi(str_args.substr(0, pos).c_str());
+            }
+        } else if(i == 10) {
+            if(!validate_string_as_number_uint8(str_args.substr(0, pos))) {
+                std::cout << "Eleventh argument (outfitId) not a valid number." << std::endl;
+                return false;
+            } else {
+                outfitId = atoi(str_args.substr(0, pos).c_str());
+            }
+        }
+
+        str_args.erase(0, pos + delimiter.length());
+
+        i += 1;
+        spaces += 1;
+    }
+
+    if(spaces > 11) {
+        std::cout << "Too many arguments provided." << std::endl;
+        return false;
+    }
+
+    std::cout << "ACCOUNT NAME: " << account_name << std::endl;
+    std::cout << "CHARACTER NAME: " << character_name << std::endl;
+    std::cout << "RACE: " << int(race_) << std::endl;
+    std::cout << "CLASS: " << int(class_) << std::endl;
+    std::cout << "GENDER: " << int(gender) << std::endl;
+    std::cout << "SKIN: " << int(skin) << std::endl;
+    std::cout << "FACE: " << int(face) << std::endl;
+    std::cout << "HAIRSTYLE: " << int(hairStyle) << std::endl;
+    std::cout << "HAIRCOLOR: " << int(hairColor) << std::endl;
+    std::cout << "FACIALHAIR: " << int(facialHair) << std::endl;
+    std::cout << "OUTFITID: " << int(outfitId) << std::endl;
+
+    // TODO: If necessary, guard against SQL injection.
+
+    QueryResult* result = LoginDatabase.PQuery(std::string(std::string("SELECT id FROM account WHERE username='") + account_name + std::string("'")).c_str());
+
+    Field* fields = result->Fetch();
+    uint32 accountId = fields[0].GetUInt32();
+
+    WorldSession* session = new WorldSession(accountId, NULL, SEC_PLAYER, 0, LOCALE_enUS);
+
+    Player *pNewChar = new Player(session);
+
+    if(!pNewChar->Create(sObjectMgr.GeneratePlayerLowGuid(), character_name, race_, class_, gender, skin, face, hairStyle, hairColor, facialHair, outfitId)) {
+        delete pNewChar;
+
+        return false;
+    }
+
+    pNewChar->setCinematic(0);
+
+    //pNewChar->setAtLoginFlag(AT_LOGIN_FIRST);
+
+    pNewChar->SaveToDB();
+
+
+    // TODO: update realmcharacters ?
+    // Seems to take place in the CharacterHandler code after SaveToDB is called.
+
+    return true;
+}
+
 bool ChatHandler::HandleCharacterReputationCommand(char* args)
 {
     Player* target;
